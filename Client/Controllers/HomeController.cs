@@ -1,10 +1,9 @@
-﻿using System.Net;
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
-using System.Text;
 using Newtonsoft.Json;
+using System.Net;
+using System.Text;
 
 namespace Client.Controllers
 {

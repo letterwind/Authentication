@@ -7,7 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="CustomAuthencationHandler.cs~RF3d588c4.TMP" />
+    <None Remove="Program.cs~RF541f147.TMP" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.1" />
   </ItemGroup>
 
 </Project>

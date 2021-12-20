@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="CustomAuthencationHandler.cs~RF3d588c4.TMP" />
+    <PackageReference Include="IdentityServer4" Version="4.1.2" />
   </ItemGroup>
 
 </Project>
