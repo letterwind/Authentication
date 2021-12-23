@@ -67,6 +67,19 @@ services.AddIdentityServer()
                 "my.scope"
             },
             AllowOfflineAccess = true
+        },
+        new Client
+        {
+            ClientId = "client_id_js",
+            
+            AllowedGrantTypes = GrantTypes.Implicit,
+            RedirectUris = { "https://localhost:44342/signin" },
+            AllowedScopes =
+            {
+                "ApiOne",
+                IdentityServerConstants.StandardScopes.OpenId,
+            },
+            AllowAccessTokensViaBrowser = true,
         }
     })
     .AddInMemoryApiScopes(new List<ApiScope>()
