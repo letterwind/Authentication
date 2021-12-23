@@ -71,7 +71,7 @@ services.AddIdentityServer()
         new Client
         {
             ClientId = "client_id_js",
-            
+            AllowedCorsOrigins = { "https://localhost:44342" },
             AllowedGrantTypes = GrantTypes.Implicit,
             RedirectUris = { "https://localhost:44342/signin" },
             AllowedScopes =
@@ -102,9 +102,11 @@ services.AddIdentityServer()
     })
     .AddDeveloperSigningCredential();
 
+
 services.AddControllersWithViews();
 
 var app = builder.Build();
+
 
 app.UseIdentityServer();
 

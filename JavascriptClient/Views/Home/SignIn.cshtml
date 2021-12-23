@@ -1,3 +1,8 @@
-﻿<button type="button">Extract Token</button>
+﻿<script src="https://cdnjs.cloudflare.com/ajax/libs/oidc-client/1.11.5/oidc-client.min.js" integrity="sha512-pGtU1n/6GJ8fu6bjYVGIOT9Dphaw5IWPwVlqkpvVgqBxFkvdNbytUh0H8AP15NYF777P4D3XEeA/uDWFCpSQ1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+    var userManager = new Oidc.UserManager();
 
-<script src="sign-in-callback.js"></script>
+    userManager.signinRedirectCallback().then(res => {
+        location.href = "/Home/Index";
+    });
+</script>
