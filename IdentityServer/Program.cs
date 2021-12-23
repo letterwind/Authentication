@@ -74,12 +74,17 @@ services.AddIdentityServer()
             AllowedCorsOrigins = { "https://localhost:44342" },
             AllowedGrantTypes = GrantTypes.Implicit,
             RedirectUris = { "https://localhost:44342/signin" },
+            AccessTokenLifetime = 1,
+            
             AllowedScopes =
             {
                 "ApiOne",
+                "ApiTwo",
                 IdentityServerConstants.StandardScopes.OpenId,
+                "my.scope"
             },
             AllowAccessTokensViaBrowser = true,
+            RequireConsent = false
         }
     })
     .AddInMemoryApiScopes(new List<ApiScope>()
