@@ -1,18 +1,25 @@
+using System.Reflection;
 using System.Security.Claims;
-using IdentityModel;
+using IdentityServer;
 using IdentityServer.Data;
-using IdentityServer4;
-using IdentityServer4.Models;
+using IdentityServer4.EntityFramework.DbContexts;
+using IdentityServer4.EntityFramework.Mappers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
+var migrationsAssembly = typeof(Program).GetTypeInfo().Assembly.GetName().Name;
+
 var builder = WebApplication.CreateBuilder(args);
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 var services = builder.Services;
 
 services.AddDbContext<AppDbContext>(config =>
 {
-    config.UseInMemoryDatabase("Memory");
+    //config.UseInMemoryDatabase("Memory");
+    config.UseSqlServer(connectionString);
+
 });
 
 // register Identity services
@@ -32,81 +39,27 @@ services.ConfigureApplicationCookie(config =>
 {
     config.Cookie.Name = "IdentityServer.Cookie";
     config.LoginPath = "/Auth/Login";
-
+    config.LogoutPath = "/Auth/Logout";
 });
 
 services.AddIdentityServer()
     .AddAspNetIdentity<IdentityUser>()
-    .AddInMemoryApiResources(new List<ApiResource>
+    //.AddInMemoryApiResources(Configurations.GetApi())
+    //.AddInMemoryClients(Configurations.GetClients())
+    //.AddInMemoryApiScopes(Configurations.GetApiScope())
+    //.AddInMemoryIdentityResources(Configurations.GetIdentityResource())
+    //.AddTestUsers(TestUsers.Users)
+    .AddConfigurationStore(options =>
     {
-        new ApiResource(){Name = "ApiOne", Scopes = {"ApiOne" } },
-        new ApiResource(){Name = "ApiTwo", Scopes = {"ApiTwo"} }
+        options.ConfigureDbContext = b => b.UseSqlServer(connectionString,
+            sql => sql.MigrationsAssembly(migrationsAssembly));
     })
-    .AddInMemoryClients(new List<Client>
+    .AddOperationalStore(options =>
     {
-        new Client
-        {
-            ClientId = "client_id",
-            ClientSecrets = { new Secret("client_secret".ToSha256()) },
-            AllowedGrantTypes = GrantTypes.ClientCredentials,
-            AllowedScopes = { "ApiOne" }
-        },
-        new Client
-        {
-            ClientId = "client_id_mvc",
-            ClientSecrets = { new Secret("client_secret_mvc".ToSha256()) },
-            AllowedGrantTypes = GrantTypes.Code,
-            //AlwaysIncludeUserClaimsInIdToken = true,
-            RedirectUris = { "https://localhost:44300/signin-oidc" },
-            AllowedScopes =
-            {
-                "ApiOne", 
-                "ApiTwo", 
-                IdentityServerConstants.StandardScopes.OpenId,
-                IdentityServerConstants.StandardScopes.Profile,
-                "my.scope"
-            },
-            AllowOfflineAccess = true
-        },
-        new Client
-        {
-            ClientId = "client_id_js",
-            AllowedCorsOrigins = { "https://localhost:44342" },
-            AllowedGrantTypes = GrantTypes.Implicit,
-            RedirectUris = { "https://localhost:44342/signin" },
-            AccessTokenLifetime = 1,
-            
-            AllowedScopes =
-            {
-                "ApiOne",
-                "ApiTwo",
-                IdentityServerConstants.StandardScopes.OpenId,
-                "my.scope"
-            },
-            AllowAccessTokensViaBrowser = true,
-            RequireConsent = false
-        }
-    })
-    .AddInMemoryApiScopes(new List<ApiScope>()
-    {
-        new ApiScope{ Name = "ApiOne"},
-        new ApiScope{ Name = "ApiTwo", UserClaims = {"letter.api.boss"} }
-    })
-    .AddInMemoryIdentityResources(new List<IdentityResource>()
-    {
-        new IdentityResources.OpenId(),
-        //new IdentityResources.Profile(),
-        new IdentityResource
-        {
-            Name = "my.scope",
-            UserClaims =
-            {
-                "letter.boss"
-            }
-        }
+        options.ConfigureDbContext = b => b.UseSqlServer(connectionString,
+            sql => sql.MigrationsAssembly(migrationsAssembly));
     })
     .AddDeveloperSigningCredential();
-
 
 services.AddControllersWithViews();
 
@@ -124,10 +77,54 @@ app.UseEndpoints(config =>
 using (var scope = app.Services.CreateScope())
 {
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
-    var user = new IdentityUser("letter");
-    userManager.CreateAsync(user, "password").GetAwaiter().GetResult();
-    userManager.AddClaimAsync(user, new Claim("letter.boss", "big.cookies")).GetAwaiter().GetResult();
-    userManager.AddClaimAsync(user, new Claim("letter.api.boss", "big.api.cookies")).GetAwaiter().GetResult();
+    if (!userManager.Users.Any())
+    {
+        var user = new IdentityUser("letter");
+        userManager.CreateAsync(user, "password").GetAwaiter().GetResult();
+        userManager.AddClaimAsync(user, new Claim("letter.boss", "big.cookies")).GetAwaiter().GetResult();
+        userManager.AddClaimAsync(user, new Claim("letter.api.boss", "big.api.cookies")).GetAwaiter().GetResult();
+    }
+
+    // Db Migration
+    scope.ServiceProvider.GetRequiredService<PersistedGrantDbContext>().Database.Migrate();
+
+    var context = scope.ServiceProvider.GetRequiredService<ConfigurationDbContext>();
+    context.Database.Migrate();
+    if (!context.Clients.Any())
+    {
+        foreach (var client in Configurations.GetClients())
+        {
+            context.Clients.Add(client.ToEntity());
+        }
+        context.SaveChanges();
+    }
+
+    if (!context.IdentityResources.Any())
+    {
+        foreach (var resource in Configurations.GetIdentityResource())
+        {
+            context.IdentityResources.Add(resource.ToEntity());
+        }
+        context.SaveChanges();
+    }
+
+    if (!context.ApiResources.Any())
+    {
+        foreach (var resource in Configurations.GetApi())
+        {
+            context.ApiResources.Add(resource.ToEntity());
+        }
+        context.SaveChanges();
+    }
+
+    if (!context.ApiScopes.Any())
+    {
+        foreach (var resource in Configurations.GetApiScope())
+        {
+            context.ApiScopes.Add(resource.ToEntity());
+        }
+        context.SaveChanges();
+    }
 }
 
 app.Run();

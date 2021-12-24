@@ -2,6 +2,7 @@
     authority: "https://localhost:44325/",
     client_id: "client_id_js",
     redirect_uri: "https://localhost:44342/signin",
+    post_logout_redirect_uri: "https://localhost:44342/Home/Index",
     response_type: "id_token token",
     scope: "openid ApiOne ApiTwo my.scope",
     userStore: new Oidc.WebStorageStateStore({ store: window.localStorage })
@@ -20,6 +21,10 @@ userManager.getUser().then(user => {
         refreshing = false;
     }
 });
+
+var signOut = function() {
+    userManager.signoutRedirect();
+}
 
 var signIn = function() {
     userManager.signinRedirect();

@@ -16,7 +16,9 @@ services.AddAuthentication(config =>
         config.ClientId = "client_id_mvc";
         config.ClientSecret = "client_secret_mvc";
         config.Authority = "https://localhost:44325/";
-        
+
+        //config.SignedOutRedirectUri = "https://localhost:44325/Auth/Logout";
+        config.SignedOutCallbackPath = "/Home/Index";
         config.SaveTokens = true;
 
         config.ResponseType = "code";
